@@ -52,7 +52,7 @@ namespace MayPrisoners
   
     private button1_Click (_ : object,  _ : System.EventArgs) : void
     {
-        for(mutable i=0; i < 100000; i++)
+        for(mutable i=0; i < 10000; i++)
             runSimulation();
         
         
@@ -69,16 +69,9 @@ namespace MayPrisoners
     }
     private runSimulation():void
     {
-        for(mutable i=0; i < all_count - 1; i++)
-            for (mutable j = i + 1; j < all_count; j++)
-            {
-                def (gen1, points1) = prisoners[i];
-                def (gen2, points2) = prisoners[j];
-
-                def (nPoints1, nPoints2) = getPoints(gen1,gen2);
-                prisoners[i] = (gen1, points1 + nPoints1);
-                prisoners[j] = (gen2, points2 + nPoints2);
-            }
+        for (mutable i=0; i < 10; i++)
+            doIteration();
+        
         def temp:array[double*int] = array(all_count);
         mutable tempCounter = 0;
         for(mutable m=0; m < best_count; m++)
@@ -91,6 +84,19 @@ namespace MayPrisoners
                 tempCounter++;
             }
         prisoners = temp;   
+    }
+    private doIteration():void
+    {
+        for(mutable i=0; i < all_count - 1; i++)
+            for (mutable j = i + 1; j < all_count; j++)
+            {
+                def (gen1, points1) = prisoners[i];
+                def (gen2, points2) = prisoners[j];
+
+                def (nPoints1, nPoints2) = getPoints(gen1,gen2);
+                prisoners[i] = (gen1, points1 + nPoints1);
+                prisoners[j] = (gen2, points2 + nPoints2);
+            }   
     }
     private getMutation(gen:double):double
     {
