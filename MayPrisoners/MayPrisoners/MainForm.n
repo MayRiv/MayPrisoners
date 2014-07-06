@@ -1,0 +1,131 @@
+﻿using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+namespace MayPrisoners
+{
+  /// <summary>
+  /// Description of MainForm.
+  /// </summary>
+  public partial class MainForm : Form
+  {
+      
+    mutable prisoners:array[double*int]; //genes and points
+    
+    both_win:int;
+    both_lose:int;
+    one_win:int;
+    one_lose:int;
+    best_count:int;
+    all_count:int;
+    randomizer:Random;
+    public this()
+    {
+      InitializeComponent();
+      randomizer = Random();
+      one_win = 1000;
+      both_win = 500;
+      both_lose = 250;
+      one_lose = 125;
+      assert(one_win>both_win);
+      assert(both_win>both_lose);
+      assert(both_lose>one_lose);
+      best_count = 10;
+      all_count = C(best_count,2);
+      prisoners = array(all_count);
+      for(mutable i=0; i < all_count; i++)
+        prisoners[i] = (0.5, 0:int);
+    }
+  
+    private mutable label1 : System.Windows.Forms.Label;
+  
+    private mutable button1 : System.Windows.Forms.Button;
+  
+    private button1_Click (_ : object,  _ : System.EventArgs) : void
+    {
+        for(mutable i=0; i < 100000; i++)
+            runSimulation();
+        
+        
+        label1.Text = getAvarage().ToString();
+    }
+    private C(n:int,m:int):int
+    {
+        fac(n)/(fac(m)*fac(n - m));   
+    }
+    private fac(i:int):int
+    {
+        if (i == 1) 1;
+        else i * fac(i - 1);
+    }
+    private runSimulation():void
+    {
+        for(mutable i=0; i < all_count - 1; i++)
+            for (mutable j = i + 1; j < all_count; j++)
+            {
+                def (gen1, points1) = prisoners[i];
+                def (gen2, points2) = prisoners[j];
+
+                def (nPoints1, nPoints2) = getPoints(gen1,gen2);
+                prisoners[i] = (gen1, points1 + nPoints1);
+                prisoners[j] = (gen2, points2 + nPoints2);
+            }
+        def temp:array[double*int] = array(all_count);
+        mutable tempCounter = 0;
+        for(mutable m=0; m < best_count; m++)
+            for (mutable n = m + 1; n < best_count; n++)
+            {
+                
+                def (gen1, _) = prisoners[m];
+                def (gen2, _) = prisoners[n];
+                temp[tempCounter] = (getMutation((gen1 + gen2) / 2), 0);
+                tempCounter++;
+            }
+        prisoners = temp;   
+    }
+    private getMutation(gen:double):double
+    {
+        match(randomizer.NextDouble())
+        {
+         | value when (value > 0.5) && (gen + 0.1) < 1 => gen + 0.1; 
+         | value when (value < 0.5) && (gen - 0.1) > 0 => gen - 0.1;
+         | _ => gen;
+        }
+        
+    }
+    
+    private getPoints(gen1:double, gen2:double):(int*int)
+    {
+        def first = randomizer.NextDouble()  > gen1;
+        def second = randomizer.NextDouble() > gen2;
+        
+        match(first,second)
+        {
+         |_ when first && !second  => (one_lose,  one_win);
+         |_ when !first && second  => (one_win,   one_lose);
+         |_ when first && second   => (both_win,  both_win);
+         |_ when !first && !second => (both_lose, both_lose);                  
+        }
+    }
+    private getAvarage():double
+    {
+        mutable result = 0:double;
+        for (mutable i = 0; i < all_count; i++)
+        {
+            def (gen,_) = prisoners[i];
+            result += gen;
+        }
+        result /= all_count;
+        result;
+    }
+  }
+}
